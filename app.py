@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-from streamlit.components.v1 import html
 
 st.set_page_config(layout="wide")
 st.title("🗺️ Retail Location Intelligence (MVP)")
@@ -9,13 +8,7 @@ MAPPLS_KEY = st.secrets["MAPPLS_KEY"]
 
 # Sidebar
 city = st.sidebar.selectbox("City", ["Bangalore", "Mumbai", "Delhi"])
-
-# 🔧 FIX 1: Mappls-friendly categories
-category = st.sidebar.selectbox(
-    "Category",
-    ["beauty", "salon", "mall", "shopping"]
-)
-
+category = st.sidebar.selectbox("Category", ["beauty", "salon", "mall", "shopping"])
 radius = st.sidebar.slider("Radius (meters)", 500, 3000, 1500)
 
 city_coords = {
@@ -41,12 +34,12 @@ def fetch_pois(query, lat, lng, radius):
 pois = fetch_pois(category, lat, lng, radius)
 
 # KPIs
-col1, col2, col3 = st.columns(3)
-col1.metric("POIs Found", len(pois))
-col2.metric("Competition Score", round(len(pois) / 10, 2))
-col3.metric("Demand Score", min(10, len(pois) * 0.2))
+c1, c2, c3 = st.columns(3)
+c1.metric("POIs Found", len(pois))
+c2.metric("Competition Score", round(len(pois) / 10, 2))
+c3.metric("Demand Score", min(10, len(pois) * 0.2))
 
-# Build JS for markers & heatmap
+# Build JS markers
 markers_js = ""
 heatmap_js = ""
 
@@ -58,7 +51,6 @@ for p in pois:
         title: "{p['placeName']}"
     }});
     """
-
     heatmap_js += f"""
     heatData.push({{
         lat: {p['latitude']},
@@ -67,36 +59,50 @@ for p in pois:
     }});
     """
 
-# 🔧 FIX 2: Delayed Mappls SDK loading (Streamlit Cloud fix)
-map_html = f"""
-<div id="map" style="width:100%; height:600px;"></div>
+# ✅ IFRAME-BASED MAP (KEY FIX)
+map_iframe = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body, #map {{
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+    }}
+  </style>
+</head>
+<body>
 
+<div id="map"></div>
+
+<script src="https://apis.mappls.com/advancedmaps/api/{MAPPLS_KEY}/map_sdk?layer=vector"></script>
 <script>
-function loadMappls() {{
-  var script = document.createElement("script");
-  script.src = "https://apis.mappls.com/advancedmaps/api/{MAPPLS_KEY}/map_sdk?layer=vector";
-  script.onload = function() {{
-    var map = new mappls.Map("map", {{
-      center: [{lat}, {lng}],
-      zoom: 13
-    }});
+  var map = new mappls.Map("map", {{
+    center: [{lat}, {lng}],
+    zoom: 13
+  }});
 
-    {markers_js}
+  {markers_js}
 
-    var heatData = [];
-    {heatmap_js}
+  var heatData = [];
+  {heatmap_js}
 
-    mappls.HeatmapLayer({{
-      map: map,
-      data: heatData,
-      radius: 40
-    }});
-  }};
-  document.body.appendChild(script);
-}}
-
-setTimeout(loadMappls, 1500);
+  mappls.HeatmapLayer({{
+    map: map,
+    data: heatData,
+    radius: 40
+  }});
 </script>
+
+</body>
+</html>
 """
 
-html(map_html, height=650)
+st.components.v1.iframe(
+    srcdoc=map_iframe,
+    height=650,
+    scrolling=False
+)
