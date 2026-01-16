@@ -2,66 +2,40 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Retail Location Intelligence – Mappls Demo</title>
+  <title>Mappls Minimal Test</title>
 
   <!-- Mappls Web SDK -->
   <script src="https://apis.mappls.com/advancedmaps/api/axmsojqaogkvqxgxqlryxxtzmixevjopdbwg/map_sdk?layer=vector"></script>
 
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      height: 100%;
     }
     #map {
       width: 100%;
-      height: 100vh;
-    }
-    .panel {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      background: white;
-      padding: 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      z-index: 10;
+      height: 100%;
     }
   </style>
 </head>
 
 <body>
 
-<div class="panel">
-  <b>Retail Location Intelligence</b><br/>
-  City: Bangalore<br/>
-  Radius: 1.5 km<br/>
-  <small>Powered by Mappls Web SDK</small>
-</div>
-
 <div id="map"></div>
 
 <script>
-  var map = new mappls.Map("map", {
-    center: [12.9716, 77.5946],
-    zoom: 13
-  });
+  // Delay execution to ensure SDK is loaded
+  window.onload = function () {
+    if (typeof mappls === "undefined") {
+      alert("Mappls SDK did not load");
+      return;
+    }
 
-  // Proposed store location
-  new mappls.Marker({
-    map: map,
-    position: [12.9716, 77.5946],
-    title: "Proposed Store Location"
-  });
-
-  // Catchment radius (1.5 km)
-  new mappls.Circle({
-    map: map,
-    center: [12.9716, 77.5946],
-    radius: 1500,
-    strokeColor: "blue",
-    strokeOpacity: 0.6,
-    fillOpacity: 0.2
-  });
+    var map = new mappls.Map("map", {
+      center: [12.9716, 77.5946],
+      zoom: 13
+    });
+  };
 </script>
 
 </body>
