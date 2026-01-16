@@ -101,8 +101,13 @@ map_iframe = f"""
 </html>
 """
 
-st.components.v1.iframe(
-    srcdoc=map_iframe,
+st.components.v1.html(
+    f"""
+    <iframe
+        srcdoc='{map_iframe.replace("'", "&apos;")}'
+        style="width:100%; height:650px; border:none;"
+    ></iframe>
+    """,
     height=650,
-    scrolling=False
 )
+
