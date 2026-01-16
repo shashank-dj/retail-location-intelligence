@@ -1,7 +1,6 @@
 import streamlit as st
 import requests
 import pandas as pd
-import math
 
 st.set_page_config(layout="wide")
 st.title("📊 Retail Location Intelligence (Map-less MVP)")
@@ -24,16 +23,25 @@ city_coords = {
 
 lat, lng = city_coords[city]
 
-# ---------------- Mappls API ----------------
+# ---------------- Mappls API (CORRECT AUTH) ----------------
 def fetch_pois(query, lat, lng, radius):
     url = "https://atlas.mappls.com/api/places/search/json"
+
+    headers = {
+        "X-Mappls-REST-Key": MAPPLS_KEY
+    }
+
     params = {
         "query": query,
         "location": f"{lat},{lng}",
-        "radius": radius,
-        "key": MAPPLS_KEY
+        "radius": radius
     }
-    r = requests.get(url, params=params, timeout=10)
+
+    r = requests.get(url, headers=headers, params=params, timeout=10)
+
+    # ---- DEBUG PROOF (for demo) ----
+    st.write(f"API Status for '{query}':", r.status_code)
+
     data = r.json()
     return data.get("suggestedLocations", [])
 
@@ -105,11 +113,11 @@ if sample:
     sample_df = pd.DataFrame(sample)[["placeName", "address"]]
     st.dataframe(sample_df, use_container_width=True)
 else:
-    st.info("No POIs returned. Try changing category or radius.")
+    st.info("No POIs returned. Try increasing radius or changing category.")
 
 # ---------------- Key Validation ----------------
 st.divider()
 st.caption(
-    "✅ All data above is fetched live using Mappls REST APIs. "
-    "If these tables populate, the Mappls key is working correctly."
+    "✅ Data above is fetched live using Mappls Places REST API "
+    "with X-Mappls-REST-Key authentication."
 )
